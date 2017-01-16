@@ -11,6 +11,9 @@
 
 @interface ViewController ()
 
+@property (nonatomic, weak) IBOutlet UITextView *username;
+@property (nonatomic, weak) IBOutlet UITextView *password;
+
 @end
 
 @implementation ViewController
