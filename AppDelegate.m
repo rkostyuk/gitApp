@@ -7,8 +7,12 @@
 //
 
 #import "AppDelegate.h"
+#import "SWRevealViewController.h"
+#import "KeychainWrapper.h"
 
 @interface AppDelegate ()
+
+@property (nonatomic, strong) KeychainWrapper *keychain;
 
 @end
 
@@ -16,7 +20,12 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Override point for customization after application launch.
+    self.keychain = [[KeychainWrapper alloc] init];
+    
+    if (![[self.keychain myObjectForKey:(__bridge id)(kSecValueData)] isEqualToString:@"empty password"]) {
+        self.window.rootViewController = [self returnRootViewController];
+    }
+    
     return YES;
 }
 
@@ -47,6 +56,12 @@
     // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     // Saves changes in the application's managed object context before the application terminates.
     [self saveContext];
+}
+
+- (SWRevealViewController *)returnRootViewController {
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    SWRevealViewController *viewController = (SWRevealViewController *)[storyboard instantiateViewControllerWithIdentifier:@"SWRevealViewController"];
+    return viewController;
 }
 
 
