@@ -63,8 +63,8 @@
     self.refreshControl.backgroundColor = [UIColor groupTableViewBackgroundColor];
     self.refreshControl.tintColor = [UIColor blackColor];
     [self.refreshControl addTarget:self action:@selector(getLatestEvents) forControlEvents:UIControlEventValueChanged];
-    [self.tableView setContentOffset:CGPointMake(0, -self.refreshControl.frame.size.height) animated:YES];
     [self.tableView addSubview:self.refreshControl];
+    [self.tableView setContentInset:UIEdgeInsetsMake(0, 0, 10, 0)];
 }
 
 
