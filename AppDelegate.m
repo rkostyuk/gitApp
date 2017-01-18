@@ -7,7 +7,7 @@
 //
 
 #import "AppDelegate.h"
-#import "SWRevealViewController.h"
+#import "RevealViewController.h"
 #import "KeychainWrapper.h"
 
 @interface AppDelegate ()
@@ -58,9 +58,9 @@
     [self saveContext];
 }
 
-- (SWRevealViewController *)returnRootViewController {
+- (RevealViewController *)returnRootViewController {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-    SWRevealViewController *viewController = (SWRevealViewController *)[storyboard instantiateViewControllerWithIdentifier:@"SWRevealViewController"];
+    RevealViewController *viewController = (RevealViewController *)[storyboard instantiateViewControllerWithIdentifier:@"revealViewController"];
     return viewController;
 }
 
