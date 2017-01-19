@@ -2,12 +2,12 @@
 //  RevealViewController.h
 //  gitApp
 //
-//  Created by Roman Kostyuk on 1/16/17.
+//  Created by Roman Kostyuk on 1/17/17.
 //  Copyright © 2017 Roman Kostyuk. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import "SWRevealViewController.h"
 
-@interface RevealViewController : UIViewController
+@interface RevealViewController : SWRevealViewController
 
 @end
