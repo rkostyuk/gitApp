@@ -8,6 +8,7 @@
 
 #import "RootViewController.h"
 #import "ViewController.h"
+#import "RevealViewController.h"
 #import "SWRevealViewController.h"
 #import "KeychainWrapper.h"
 #import <OCTServer.h>
@@ -46,8 +47,9 @@
     SWRevealViewController *revealViewController = self.revealViewController;
     if (revealViewController) {
         [self.revealButtonItem setTarget: self.revealViewController];
-        [self.revealButtonItem setAction: @selector( revealToggle: )];
+        [self.revealButtonItem setAction: @selector(revealToggle:)];
         [self.navigationController.navigationBar addGestureRecognizer: self.revealViewController.panGestureRecognizer];
+
     }
     
     self.rawLogin = [[NSUserDefaults standardUserDefaults] objectForKey:@"username"];
@@ -56,6 +58,11 @@
     
     [self fetchEvents];
     [self initRefreshControl];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(closeMenu) name:@"CloseMenu" object:nil];
 }
 
 - (void)initRefreshControl {
@@ -130,7 +137,7 @@
     cell.date.text = event.date.timeAgoSinceNow;
     cell.eventDescription.text = [self eventDescription:event];
     cell.commitCount.text = [NSString stringWithFormat:@"Commits: %ld", event.commitCount];
-
+    
     return cell;
 }
 
@@ -177,14 +184,35 @@
     }
 }
 
+- (void)closeMenu {
+    [self.revealViewController revealToggleAnimated:NO];
+    [[self topMostController] presentViewController:[self returnLoginViewController] animated:NO completion:nil];
+}
+
+
+- (UINavigationController *)returnLoginViewController {
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
+    UINavigationController *viewController = (UINavigationController *)[storyboard instantiateViewControllerWithIdentifier:@"navigationLoginViewController"];
+    return viewController;
+}
+
+- (UIViewController*)topMostController {
+    UIViewController *topController = [UIApplication sharedApplication].keyWindow.rootViewController;
+    
+    while (topController.presentedViewController) {
+        topController = topController.presentedViewController;
+    }
+    
+    return topController;
+}
 
 #pragma mark - Navigation
 
-//// In a storyboard-based application, you will often want to do a little preparation before navigation
-//- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-//    // Get the new view controller using [segue destinationViewController].
-//    // Pass the selected object to the new view controller.
-//}
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
 
 
 @end
