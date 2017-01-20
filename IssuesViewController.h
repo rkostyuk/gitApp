@@ -10,6 +10,4 @@
 
 @interface IssuesViewController : UIViewController
 
-@property (nonatomic, strong) NSMutableArray *repos;
-
 @end

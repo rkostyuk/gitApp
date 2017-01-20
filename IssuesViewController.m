@@ -28,11 +28,13 @@
 
 @property (nonatomic, weak) IBOutlet UITableView *tableView;
 @property (nonatomic, weak) IBOutlet UIBarButtonItem *revealButtonItem;
-@property (nonatomic, strong) KeychainWrapper    *keychain;
 @property (nonatomic, strong) NSMutableArray     *allItems;
 @property (nonatomic, strong) NSMutableArray     *displayedItems;
 @property (nonatomic, strong) NSMutableArray     *filteredItems;
+@property (nonatomic, strong) NSMutableArray     *repos;
 @property (nonatomic, strong) UIRefreshControl   *refreshControl;
+
+@property (nonatomic, strong) KeychainWrapper    *keychain;
 @property (nonatomic, strong) NSString           *rawLogin;
 @property (nonatomic, strong) OCTUser            *user;
 @property (nonatomic, strong) OCTClient          *client;
@@ -63,7 +65,7 @@
     self.user = [OCTUser userWithRawLogin:self.rawLogin server:OCTServer.dotComServer];
     self.client = [OCTClient authenticatedClientWithUser:self.user token:[self.keychain myObjectForKey:(__bridge id)(kSecValueData)]];
     
-    [self fetchIssuesFromServer];
+    [self fetchRepositories];
     [self initRefreshControl];
     [self initSearchController];
 }
@@ -81,19 +83,24 @@
     [self.tableView setContentInset:UIEdgeInsetsMake(0, 0, 10, 0)];
 }
 
-//- (void)fetchRepositories {
-//    [SVProgressHUD show];
-//    self.tableView.hidden = YES;
-//    RACSignal *request = [self.client fetchUserRepositories];
-//    [[request collect] subscribeNext:^(NSArray *responseObject) {
-//        [self completeRequestRepos:responseObject];
-//    } error:^(NSError *error) {
-//        NSLog(@"%@", error);
-//    }];
-//}
+- (void)fetchRepositories {
+    [SVProgressHUD show];
+    self.tableView.hidden = YES;
+    RACSignal *request = [self.client fetchUserRepositories];
+    [[request collect] subscribeNext:^(NSArray *responseObject) {
+        [self completeRequestRepos:responseObject];
+        [self fetchIssuesFromServer];
+    } error:^(NSError *error) {
+        NSLog(@"%@", error);
+    }];
+}
 
 - (void)fetchLatesIssues {
     [self fetchIssuesFromServer];
+}
+
+- (void)completeRequestRepos:(NSArray *)responseObject {
+    [self.repos addObjectsFromArray:responseObject];
 }
 
 
@@ -181,13 +188,14 @@
         requestSignal = [[self.client enqueueRequest:request resultClass:OCTIssue.class] oct_parsedResults];
         
         [[requestSignal collect] subscribeNext:^(NSArray *responseObject) {
-            [self completeRequest:responseObject withSpinner:NO];
+            if (responseObject.count > 0) {
+                [self completeRequest:responseObject withSpinner:NO];
+            }
         } error:^(NSError *error) {
             NSLog(@"%@", error);
         }];
     }
 }
-
 
 #pragma mark - Navigation
 
