@@ -8,8 +8,8 @@
 
 #import "ViewController.h"
 
-@interface IssueDescriptionController : ViewController
+@interface DescriptionController : ViewController
 
-@property (nonatomic, strong) NSURL *issueURL;
+@property (nonatomic, strong) NSURL *URL;
 
 @end
