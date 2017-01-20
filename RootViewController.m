@@ -100,10 +100,12 @@
 
 - (void)fetchEvents {
     self.tableView.hidden = YES;
+    self.revealButtonItem.enabled = NO;
     [SVProgressHUD show];
     
     RACSignal *request = [self.client fetchUserEventsNotMatchingEtag:nil];
     [[request collect] subscribeNext:^(NSArray *responseObject) {
+        self.revealButtonItem.enabled = NO;
         [self completeRequest:responseObject withSpinner:NO];
     } error:^(NSError *error) {
         NSLog(@"%@", error);
@@ -130,6 +132,7 @@
     
     dispatch_async(dispatch_get_main_queue(), ^{
         self.tableView.hidden = NO;
+        self.revealButtonItem.enabled = YES;
         [self.tableView reloadData];
     });
     [self.refreshControl endRefreshing];
@@ -213,7 +216,7 @@
 
 - (UIViewController *)returnLoginViewController {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-   UIViewController *viewController = (UINavigationController *)[storyboard instantiateViewControllerWithIdentifier:@"viewController"];
+    UIViewController *viewController = (UINavigationController *)[storyboard instantiateViewControllerWithIdentifier:@"viewController"];
     return viewController;
 }
 
