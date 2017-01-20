@@ -7,6 +7,7 @@
 //
 
 #import "RepositoriesSideViewController.h"
+#import "DescriptionController.h"
 #import "SWRevealViewController.h"
 #import "KeychainWrapper.h"
 #import <OCTServer.h>
@@ -87,6 +88,7 @@
 
 - (void)fetchRepositories {
     self.tableView.hidden = YES;
+    self.revealButtonItem.enabled = NO;
     [SVProgressHUD show];
     
     RACSignal *request = [self.client fetchUserRepositories];
@@ -108,6 +110,7 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             self.tableView.hidden = NO;
             [self.tableView reloadData];
+            self.revealButtonItem.enabled = YES;
         });
     }
     [self.allItems addObjectsFromArray:responseObject];
@@ -178,8 +181,12 @@
 
 // In a storyboard-based application, you will often want to do a little preparation before navigation
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
+    if ([segue.identifier isEqualToString:@"repositories"])  {
+        DescriptionController *descriptionController = [segue destinationViewController];
+        NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
+        OCTRepository *repo = [self.displayedItems objectAtIndex:indexPath.row];
+        descriptionController.URL = repo.HTMLURL;
+    }
 }
 
 @end
