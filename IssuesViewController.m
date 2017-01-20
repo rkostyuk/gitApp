@@ -7,7 +7,7 @@
 //
 
 #import "IssuesViewController.h"
-#import "IssueDescriptionController.h"
+#import "DescriptionController.h"
 #import "SWRevealViewController.h"
 #import "KeychainWrapper.h"
 #import <OCTServer.h>
@@ -46,7 +46,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.title = @"Issues";
+    self.title = @"Issues/Pull Requests";
     
     self.keychain = [[KeychainWrapper alloc] init];
     self.allItems = [NSMutableArray new];
@@ -86,6 +86,7 @@
 - (void)fetchRepositories {
     [SVProgressHUD show];
     self.tableView.hidden = YES;
+    self.revealButtonItem.enabled = NO;
     RACSignal *request = [self.client fetchUserRepositories];
     [[request collect] subscribeNext:^(NSArray *responseObject) {
         [self completeRequestRepos:responseObject];
@@ -115,6 +116,7 @@
         dispatch_async(dispatch_get_main_queue(), ^{
             self.tableView.hidden = NO;
             [self.tableView reloadData];
+            self.revealButtonItem.enabled = YES;
         });
     }
     [self.allItems addObjectsFromArray:responseObject];
@@ -139,9 +141,16 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"issueCell"];
     
     if (cell == nil) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:@"issueCell"];
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"issueCell"];
     }
-    cell.textLabel.text = issue.title;
+    if (issue.pullRequest) {
+        NSLog(@"%@", issue.pullRequest);
+        cell.textLabel.text = issue.title;
+        cell.detailTextLabel.text = @"PULL";
+    }else{
+        cell.textLabel.text = issue.title;
+        cell.detailTextLabel.text = @"ISSUE";
+    }
     
     return cell;
 }
@@ -201,10 +210,10 @@
 
 // In a storyboard-based application, you will often want to do a little preparation before navigation
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    IssueDescriptionController *descriptionController = [segue destinationViewController];
+    DescriptionController *descriptionController = [segue destinationViewController];
     NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
     OCTIssue *issue = [self.displayedItems objectAtIndex:indexPath.row];
-    descriptionController.issueURL = issue.HTMLURL;
+    descriptionController.URL = issue.HTMLURL;
 }
 
 @end

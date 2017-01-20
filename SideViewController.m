@@ -29,7 +29,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.items = [[NSArray alloc] initWithObjects:@"profile", @"repos", @"issues", @"pull requests", @"events", @"logout", nil];
+    self.items = [[NSArray alloc] initWithObjects:@"profile", @"repositories", @"issues", @"events", @"logout", nil];
     self.title = [[NSUserDefaults standardUserDefaults] objectForKey:@"username"];
 }
 
@@ -65,7 +65,7 @@
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.row == 5) {
+    if (indexPath.row == 4) {
         [[NSNotificationCenter defaultCenter] postNotificationName:@"CloseMenu" object:nil];
         [self removePasswordFromKeychain];
     }

@@ -6,21 +6,21 @@
 //  Copyright © 2017 Roman Kostyuk. All rights reserved.
 //
 
-#import "IssueDescriptionController.h"
+#import "DescriptionController.h"
 #import <SVProgressHUD.h>
 
-@interface IssueDescriptionController () <UIWebViewDelegate>
+@interface DescriptionController () <UIWebViewDelegate>
 
 @property (nonatomic, weak) IBOutlet UIWebView *webView;
 
 @end
 
-@implementation IssueDescriptionController
+@implementation DescriptionController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    [self.webView loadRequest:[NSURLRequest requestWithURL:self.issueURL]];
-    self.title = @"Issue";
+    self.title = nil;
+    [self.webView loadRequest:[NSURLRequest requestWithURL:self.URL]];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
