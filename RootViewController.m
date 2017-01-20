@@ -16,14 +16,14 @@
 #import <ReactiveCocoa/RACSignal.h>
 #import <ReactiveCocoa/RACSignal+Operations.h>
 #import <OCTClient.h>
-#import <OCTClient+Repositories.h>
 #import <OCTClient+Events.h>
 #import <SVProgressHUD.h>
 #import <OCTEvent.h>
 #import "EventCell.h"
 #import <DateTools.h>
+#import <OCTClient+User.h>
 
-@interface RootViewController () <UITableViewDelegate, UITableViewDataSource>
+@interface RootViewController ()
 
 @property (nonatomic, weak) IBOutlet UIBarButtonItem *revealButtonItem;
 @property (nonatomic, weak) IBOutlet UITableView     *tableView;
@@ -56,6 +56,7 @@
     self.user = [OCTUser userWithRawLogin:self.rawLogin server:OCTServer.dotComServer];
     self.client = [OCTClient authenticatedClientWithUser:self.user token:[self.keychain myObjectForKey:(__bridge id)(kSecValueData)]];
     
+    [self fetchUserInfo];
     [self fetchEvents];
     [self initRefreshControl];
 }
@@ -63,6 +64,11 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(closeMenu) name:@"CloseMenu" object:nil];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"CloseMenu" object:nil];
 }
 
 - (void)initRefreshControl {
@@ -74,6 +80,14 @@
     [self.tableView setContentInset:UIEdgeInsetsMake(0, 0, 10, 0)];
 }
 
+- (void)fetchUserInfo {
+    RACSignal *request = [self.client fetchUserInfo];
+    [[request collect] subscribeNext:^(NSArray *responseObject) {
+        [self completeRequestUserInfo:responseObject];
+    } error:^(NSError *error) {
+        NSLog(@"%@", error);
+    }];
+}
 
 - (void)getLatestEvents {
     RACSignal *request = [self.client fetchUserEventsNotMatchingEtag:nil];
@@ -96,6 +110,13 @@
     }];
 }
 
+- (void)completeRequestUserInfo:(NSArray *)responseObject {
+    OCTUser *user = (OCTUser *)responseObject[0];
+    NSString *documentsDirectoryPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
+    UIImage *imageFromURL = [self getImageFromURL:user.avatarURL];
+    [self saveImage:imageFromURL withFileName:@"UserAvatar" ofType:@"jpg" inDirectory:documentsDirectoryPath];
+}
+
 - (void)completeRequest:(NSArray *)responseObject withSpinner:(BOOL)isHidden {
     if (!isHidden) {
         [SVProgressHUD dismiss];
@@ -110,8 +131,8 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         self.tableView.hidden = NO;
         [self.tableView reloadData];
-        [self.refreshControl endRefreshing];
     });
+    [self.refreshControl endRefreshing];
 }
 
 #pragma mark - TableVew
@@ -136,7 +157,7 @@
     
     cell.date.text = event.date.timeAgoSinceNow;
     cell.eventDescription.text = [self eventDescription:event];
-    cell.commitCount.text = [NSString stringWithFormat:@"Commits: %ld", event.commitCount];
+    cell.commitCount.text = [NSString stringWithFormat:@"Commits: %ld", (long)event.commitCount];
     
     return cell;
 }
@@ -186,13 +207,13 @@
 
 - (void)closeMenu {
     [self.revealViewController revealToggleAnimated:NO];
-    [[self topMostController] presentViewController:[self returnLoginViewController] animated:NO completion:nil];
+    [[self topMostController] presentViewController:[self returnLoginViewController] animated:YES completion:nil];
 }
 
 
-- (UINavigationController *)returnLoginViewController {
+- (UIViewController *)returnLoginViewController {
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-    UINavigationController *viewController = (UINavigationController *)[storyboard instantiateViewControllerWithIdentifier:@"navigationLoginViewController"];
+   UIViewController *viewController = (UINavigationController *)[storyboard instantiateViewControllerWithIdentifier:@"viewController"];
     return viewController;
 }
 
@@ -204,6 +225,24 @@
     }
     
     return topController;
+}
+
+-(UIImage *)getImageFromURL:(NSURL *)fileURL {
+    UIImage *result;
+    NSData *data = [NSData dataWithContentsOfURL:fileURL];
+    result = [UIImage imageWithData:data];
+    
+    return result;
+}
+
+-(void)saveImage:(UIImage *)image withFileName:(NSString *)imageName ofType:(NSString *)extension inDirectory:(NSString *)directoryPath {
+    if ([[extension lowercaseString] isEqualToString:@"png"]) {
+        [UIImagePNGRepresentation(image) writeToFile:[directoryPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@", imageName, @"png"]] options:NSAtomicWrite error:nil];
+    } else if ([[extension lowercaseString] isEqualToString:@"jpg"] || [[extension lowercaseString] isEqualToString:@"jpeg"]) {
+        [UIImageJPEGRepresentation(image, 1.0) writeToFile:[directoryPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.%@", imageName, @"jpg"]] options:NSAtomicWrite error:nil];
+    } else {
+        NSLog(@"Image Save Failed\nExtension: (%@) is not recognized, use (PNG/JPG)", extension);
+    }
 }
 
 #pragma mark - Navigation
